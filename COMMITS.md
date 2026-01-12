@@ -212,6 +212,62 @@ git commit -m "Add comprehensive README with architecture, usage, and API docume
 
 ---
 
+### 15. Disk I/O Metrics Collection
+
+```bash
+git add include/metrics_collector.hpp src/metrics_collector.cpp
+git commit -m "Add disk I/O metrics collection (reads, writes, data transferred)
+
+- Add disk I/O fields to SystemMetrics struct
+- Implement GetDiskIOStats() to collect cumulative and rate metrics
+- Parse iostat -I output for cumulative totals since boot
+- Calculate read/write rates from differences over time
+- Estimate read/write split using heuristics (macOS iostat doesn't separate)"
+```
+
+**Files:**
+
+- `include/metrics_collector.hpp`
+- `src/metrics_collector.cpp`
+
+---
+
+### 16. Dashboard I/O Display Enhancement
+
+```bash
+git add src/main.cpp
+git commit -m "Enhance dashboard with disk I/O display and improved disk chart
+
+- Add 8 new stat cards for disk I/O metrics (reads, writes, rates, data totals)
+- Add new Disk I/O Activity chart showing reads/sec and writes/sec over time
+- Improve disk usage chart with dynamic Y-axis range to show fluctuations
+- Update dashboard JavaScript to display I/O metrics in Activity Monitor style
+- Format large numbers with commas and display rates in KB/s or MB/s"
+```
+
+**Files:**
+
+- `src/main.cpp`
+
+---
+
+### 17. Documentation Update for I/O Metrics
+
+```bash
+git add README.md
+git commit -m "Update documentation for disk I/O metrics feature
+
+- Add disk I/O to core monitoring features list
+- Document disk I/O metrics in System Metrics Collected section
+- Update MetricsCollector component description"
+```
+
+**Files:**
+
+- `README.md`
+
+---
+
 ## Summary
 
-Total: **14 commits** organized by feature/component, making the project history easy to follow and understand.
+Total: **17 commits** organized by feature/component, making the project history easy to follow and understand.
