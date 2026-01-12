@@ -8,7 +8,7 @@ A complete, production-ready system monitoring solution built with a high-perfor
 
 ### Core Monitoring
 
-- **Real-Time System Metrics**: CPU, memory, disk, and network monitoring
+- **Real-Time System Metrics**: CPU, memory, disk, disk I/O, and network monitoring
 - **Live Web Dashboard**: Beautiful, responsive dashboard with interactive charts
 - **WebSocket Support**: Real-time metric updates via WebSocket connections
 - **Time-Series Storage**: Historical data storage with configurable retention
@@ -36,7 +36,7 @@ A complete, production-ready system monitoring solution built with a high-perfor
 6. **Server**: Main server class that orchestrates all components
 7. **Logger**: Thread-safe logging system
 8. **Connection**: Connection management with socket operations
-9. **MetricsCollector**: System metrics collection (CPU, memory, disk, network) using macOS APIs
+9. **MetricsCollector**: System metrics collection (CPU, memory, disk, disk I/O, network) using macOS APIs
 10. **MetricsStorage**: Time-series storage for historical metric data
 11. **AlertManager**: Threshold-based alerting system
 12. **WebSocket**: WebSocket protocol implementation for real-time updates
@@ -162,6 +162,11 @@ open http://localhost:8080
 - **CPU Usage**: Percentage of CPU time spent in user and system modes (matches Activity Monitor)
 - **Memory Usage**: Memory used percentage calculated as `(Active + Wired + Compressed) / Total` (matches Activity Monitor)
 - **Disk Usage**: Disk capacity percentage calculated as `Used / (Used + Available)` (matches macOS `df` command)
+- **Disk I/O**: Read/write operations, data transferred, and current I/O rates (matches Activity Monitor style)
+  - Cumulative reads/writes since boot
+  - Cumulative data read/written (TB)
+  - Current read/write rates (ops/sec)
+  - Current data read/write rates (KB/s or MB/s)
 - **Network**: RX/TX bytes, packets, and current rates (KB/s or MB/s)
 
 ## Configuration
