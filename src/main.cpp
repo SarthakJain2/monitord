@@ -209,12 +209,51 @@ std::string GetDashboardHTML() {
                 <canvas id="memory-chart"></canvas>
             </div>
             <div class="chart-card">
-                <div class="chart-title">Disk Usage Over Time (GB)</div>
+                <div class="chart-title">Disk Usage Over Time (%)</div>
                 <canvas id="disk-chart"></canvas>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">Disk I/O Activity</div>
+                <canvas id="disk-io-chart"></canvas>
             </div>
             <div class="chart-card">
                 <div class="chart-title">Network Traffic</div>
                 <canvas id="network-chart"></canvas>
+            </div>
+        </div>
+        
+        <div class="stats-grid" style="margin-top: 20px;">
+            <div class="stat-card">
+                <div class="stat-label">Disk Reads</div>
+                <div class="stat-value" id="disk-reads-value" style="font-size: 1.5em;">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Disk Writes</div>
+                <div class="stat-value" id="disk-writes-value" style="font-size: 1.5em;">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Reads/sec</div>
+                <div class="stat-value" id="disk-read-rate-value" style="font-size: 1.5em;">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Writes/sec</div>
+                <div class="stat-value" id="disk-write-rate-value" style="font-size: 1.5em;">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Data Read</div>
+                <div class="stat-value" id="disk-data-read-value" style="font-size: 1.3em;">0<span class="stat-unit"> TB</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Data Written</div>
+                <div class="stat-value" id="disk-data-written-value" style="font-size: 1.3em;">0<span class="stat-unit"> TB</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Data Read/sec</div>
+                <div class="stat-value" id="disk-data-read-rate-value" style="font-size: 1.3em;">0<span class="stat-unit"> KB/s</span></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Data Written/sec</div>
+                <div class="stat-value" id="disk-data-write-rate-value" style="font-size: 1.3em;">0<span class="stat-unit"> KB/s</span></div>
             </div>
         </div>
         
@@ -269,12 +308,50 @@ std::string GetDashboardHTML() {
             }
         });
         
+        let diskChartMin = null;
+        let diskChartMax = null;
         const diskChart = new Chart(document.getElementById('disk-chart'), {
             type: 'line',
             data: {
                 labels: [],
                 datasets: [{
                     label: 'Disk Used (%)',
+                    data: [],
+                    borderColor: 'rgb(255, 99, 132)',
+                    backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        min: 0,
+                        max: 100
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: true
+                    }
+                }
+            }
+        });
+        
+        const diskIOChart = new Chart(document.getElementById('disk-io-chart'), {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Reads/sec',
+                    data: [],
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                    tension: 0.4
+                }, {
+                    label: 'Writes/sec',
                     data: [],
                     borderColor: 'rgb(255, 99, 132)',
                     backgroundColor: 'rgba(255, 99, 132, 0.1)',
@@ -381,10 +458,42 @@ std::string GetDashboardHTML() {
                     document.getElementById('network-rx-value').innerHTML = rxDisplay;
                     document.getElementById('network-tx-value').innerHTML = txDisplay;
                 }
+                if (data.disk_io) {
+                    // Format large numbers with commas
+                    function formatNumber(num) {
+                        return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                    }
+                    
+                    // Update I/O counts
+                    document.getElementById('disk-reads-value').textContent = formatNumber(data.disk_io.reads || 0);
+                    document.getElementById('disk-writes-value').textContent = formatNumber(data.disk_io.writes || 0);
+                    
+                    // Update I/O rates (ops/sec)
+                    document.getElementById('disk-read-rate-value').textContent = (data.disk_io.read_rate || 0).toFixed(0);
+                    document.getElementById('disk-write-rate-value').textContent = (data.disk_io.write_rate || 0).toFixed(0);
+                    
+                    // Update data totals (TB)
+                    const dataReadTB = (data.disk_io.data_read || 0) / 1024 / 1024 / 1024 / 1024;
+                    const dataWrittenTB = (data.disk_io.data_written || 0) / 1024 / 1024 / 1024 / 1024;
+                    document.getElementById('disk-data-read-value').innerHTML = dataReadTB.toFixed(2) + '<span class="stat-unit"> TB</span>';
+                    document.getElementById('disk-data-written-value').innerHTML = dataWrittenTB.toFixed(2) + '<span class="stat-unit"> TB</span>';
+                    
+                    // Update data rates (KB/s or MB/s)
+                    const dataReadRateMB = (data.disk_io.data_read_rate || 0) / 1024 / 1024;
+                    const dataWriteRateMB = (data.disk_io.data_write_rate || 0) / 1024 / 1024;
+                    const dataReadRateKB = (data.disk_io.data_read_rate || 0) / 1024;
+                    const dataWriteRateKB = (data.disk_io.data_write_rate || 0) / 1024;
+                    
+                    const dataReadDisplay = dataReadRateMB >= 1 ? dataReadRateMB.toFixed(2) + ' MB/s' : dataReadRateKB.toFixed(2) + ' KB/s';
+                    const dataWriteDisplay = dataWriteRateMB >= 1 ? dataWriteRateMB.toFixed(2) + ' MB/s' : dataWriteRateKB.toFixed(2) + ' KB/s';
+                    
+                    document.getElementById('disk-data-read-rate-value').innerHTML = dataReadDisplay;
+                    document.getElementById('disk-data-write-rate-value').innerHTML = dataWriteDisplay;
+                }
                 
                 // Update charts only if they exist
                 if (typeof cpuChart !== 'undefined' && typeof memoryChart !== 'undefined' && 
-                    typeof diskChart !== 'undefined' && typeof networkChart !== 'undefined') {
+                    typeof diskChart !== 'undefined' && typeof diskIOChart !== 'undefined' && typeof networkChart !== 'undefined') {
                     const now = new Date().toLocaleTimeString();
                     
                     function addData(chart, label, value) {
@@ -404,6 +513,27 @@ std::string GetDashboardHTML() {
                     if (data.disk) {
                         // Use percentage for the disk chart so it matches data.disk.percent
                         addData(diskChart, now, data.disk.percent);
+                        // Update dynamic range based on current data
+                        const chartData = diskChart.data.datasets[0].data;
+                        if (chartData.length > 0) {
+                            const min = Math.min(...chartData);
+                            const max = Math.max(...chartData);
+                            const range = max - min;
+                            // Set range to show fluctuations: min-2% to max+2%, but at least 5% range
+                            diskChart.options.scales.y.min = Math.max(0, min - Math.max(2, range * 0.1));
+                            diskChart.options.scales.y.max = Math.min(100, max + Math.max(2, range * 0.1));
+                        }
+                    }
+                    if (data.disk_io && diskIOChart && diskIOChart.data) {
+                        diskIOChart.data.labels.push(now);
+                        diskIOChart.data.datasets[0].data.push(data.disk_io.read_rate || 0);
+                        diskIOChart.data.datasets[1].data.push(data.disk_io.write_rate || 0);
+                        if (diskIOChart.data.labels.length > 60) {
+                            diskIOChart.data.labels.shift();
+                            diskIOChart.data.datasets[0].data.shift();
+                            diskIOChart.data.datasets[1].data.shift();
+                        }
+                        diskIOChart.update('none');
                     }
                     if (data.network && networkChart && networkChart.data) {
                         const rxRateMB = data.network.rx_rate / 1024 / 1024;
