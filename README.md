@@ -330,7 +330,3 @@ curl http://localhost:8080/api/users/123
 ## License
 
 This project is provided as-is for demonstration purposes.
-
-## Author
-
-Built to demonstrate advanced C++ programming skills for systems-level development.
